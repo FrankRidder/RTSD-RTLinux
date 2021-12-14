@@ -157,6 +157,10 @@ void *taskThree() {
     int iterations = 10;
     struct timespec time[iterations];
     create_timer();
+    //Wait initial time
+    if (sigwait(&sset, &sig)) {
+        printf("failed sigwait()");
+    }
     for (int i = 0; i < iterations; i++) {
         double sum = 0.0;
         for (int j = 0; j < 1e2; j++) {
