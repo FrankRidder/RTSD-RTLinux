@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <signal.h>
+
 // Terminal variables
 static struct termios term;
 
@@ -22,8 +23,6 @@ static void createThreads();
 static void sighandler(int sig_num);
 
 int main() {
-    signal(SIGTSTP, sighandler);        // Disable CTRL+Z
-    initialiseTerminal();               // Disable echo
     createThreads();                    // Create threads
 
     terminate();                        // Wait for threads to end and terminate program
@@ -47,62 +46,62 @@ void createThreads() {
 }
 
 void *taskOne() {
-    double accum;
-    while (1) {
-        struct timespec start, stop, tim, tim2;
+    int iterations = 10;
+    struct timespec time[iterations];
+    for (int i = 0; i < iterations; i++) {
+        struct timespec tim, tim2;
         double sum = 0.0;
-        if( clock_gettime( CLOCK_REALTIME, &start) == -1 ) {
-            perror( "clock gettime" );
-            exit( EXIT_FAILURE );
-        }
-        for (int i = 0; i < 10000000; i++) {
+
+        for (int i = 0; i < 1e4; i++) {
             sum += sqrt(i);
         }
-        if( clock_gettime( CLOCK_REALTIME, &stop) == -1 ) {
+
+        if( clock_gettime( CLOCK_REALTIME, &time[i]) == -1 ) {
             perror( "clock gettime" );
             exit( EXIT_FAILURE );
-        }
-        accum = ( stop.tv_nsec - start.tv_nsec )
-                + ( stop.tv_nsec - start.tv_nsec )
-                  / BILLION;
-        printf( "%lf\n", accum );
-
+        }      
+        
         tim.tv_sec  = 0;
         tim.tv_nsec = 1000000L;
         if(nanosleep(&tim , &tim2) < 0 )
         {
             printf("Nano sleep system call failed \n");
-            return -1;
+        }
+    }
+    for (int i = 0; i < iterations; i++) {
+        printf("%02ld:%03ld \n", time[i].tv_sec % 100, (long)(time[i].tv_nsec / 1e6));
+    }
+}
+
+void *taskTwo() {
+    int iterations = 10;
+    struct timespec time[iterations];
+    for (int i = 0; i < iterations; i++) {
+        
+        struct timespec tim, tim2;
+        double sum = 0.0;
+
+        for (int i = 0; i < 1e4; i++) {
+            sum += sqrt(i);
         }
 
+        if( clock_gettime( CLOCK_REALTIME, &time[i]) == -1 ) {
+            perror( "clock gettime" );
+            exit( EXIT_FAILURE );
+        }      
+        
+        tim.tv_sec  = 0;
+        tim.tv_nsec = 1000000L;
+        if(nanosleep(&tim , &tim2) < 0 )
+        {
+            printf("Nano sleep system call failed \n");
+        }
     }
+    for (int i = 0; i < iterations; i++) {
+        p
 }
 
 void terminate() {
     /* Wait for threads to end */
-
     pthread_join(thread, NULL);
-
-    /* remove garbage from stdin */
-    int stdin_copy = dup(STDIN_FILENO);
-    tcdrain(stdin_copy);
-    tcflush(stdin_copy, TCIFLUSH);
-    close(stdin_copy);
-    term.c_lflag |= ECHO;  /* turn on ECHO */
-    tcsetattr(fileno(stdin), 0, &term);
-}
-
-void initialiseTerminal() {
-    tcgetattr(fileno(stdin), &term);
-    term.c_lflag &= ~ECHO;
-    tcsetattr(fileno(stdin), 0, &term);
-}
-
-// Signal Handler for SIGTSTP, we will get huge memory leaks if not closing properly.
-void sighandler(int sig_num) {
-    // Reset handler to catch SIGTSTP next time
-    signal(SIGTSTP, sighandler);
-    printf("Cannot execute Ctrl+Z, use ESC instead\n");
-
-    pthread_cancel(thread);
 }
