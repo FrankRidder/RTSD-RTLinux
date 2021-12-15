@@ -25,6 +25,8 @@ static void createThreads();
 static void sighandler(int sig_num);
 
 static void create_timer();
+static void load();
+static void print_time(struct timespec time[], int iterations);
 
 static sigset_t sset;
 static int sig;
@@ -42,8 +44,8 @@ void createThreads() {
 
     pthread_attr_init(&tattr); //tattr init met defaultwaarden
 
-    //int status = pthread_create(&thread, &tattr, taskOne, (void *) i);    //Create threads
-    //int status = pthread_create(&thread, &tattr, taskTwo, (void *) i);    //Create threads
+    //int status = pthread_create(&thread, &tattr, taskOne, (void *) i);  //Create threads
+    //int status = pthread_create(&thread, &tattr, taskTwo, (void *) i);  //Create threads
     int status = pthread_create(&thread, &tattr, taskThree, (void *)i); //Create threads
     if (status != 0) {
         printf("While creating thread 1, pthread_create returned error code %d\n", status);
@@ -53,67 +55,27 @@ void createThreads() {
     pthread_exit(NULL);
 }
 
-void *taskOne() {
-    int iterations = 10;
-    struct timespec time[iterations];
-    for (int i = 0; i < iterations; i++) {
-        struct timespec tim, tim2;
-        double sum = 0.0;
-
-        for (int j = 0; j < 1e4; j++) {
-            sum += sqrt(j);
-        }
-
-        if (clock_gettime(CLOCK_REALTIME, &time[i]) == -1) {
-            perror("clock gettime");
-            exit(EXIT_FAILURE);
-        }
-
-        tim.tv_sec = 0;
-        tim.tv_nsec = 1000000L;
-        if (nanosleep(&tim, &tim2) < 0) {
-            printf("Nano sleep system call failed \n");
-        }
-    }
-    for (int i = 0; i < iterations; i++) {
-        printf("%02ld:%03ld \n", time[i].tv_sec % 100, (long) (time[i].tv_nsec / 1e6));
+void load()
+{
+    double sum = 0.0;
+    for (int j = 0; j < 1e4; j++) {
+        sum += sqrt(j);
     }
 }
 
-void *taskTwo() {
-    int iterations = 10;
-    struct timespec time[iterations];
+void print_time(struct timespec time[], int iterations)
+{
     for (int i = 0; i < iterations; i++) {
-        struct timespec deadline;
-        clock_gettime(CLOCK_MONOTONIC, &deadline);
-        // Add the time you want to sleep
-        deadline.tv_nsec += 1000000L;
-
-        // Normalize the time to account for the second boundary
-        if (deadline.tv_nsec >= 1000000000) {
-            deadline.tv_nsec -= 1000000000;
-            deadline.tv_sec++;
-        }
-
-        double sum = 0.0;
-        for (int j = 0; j < 1e2; j++) {
-            sum += sqrt(j);
-        }
-
-        if (clock_gettime(CLOCK_MONOTONIC, &time[i]) == -1) {
-            perror("clock gettime");
-            exit(EXIT_FAILURE);
-        }
-
-        if (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL) < 0) {
-            printf("BIgly error");
-        }
-    }
-    for (int i = 0; i < iterations; i++) {
-        printf("%02ld:%03ld \n", time[i].tv_sec % 100, (long) (time[i].tv_nsec / 1e6));
+        if (i != 0)
+            printf("%02ld:%06ld %04ld\n", 
+                time[i].tv_sec % 100, 
+                (long) (time[i].tv_nsec / 1e3), 
+                (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+            );
+        else
+            printf("%02ld:%06ld\n", time[i].tv_sec % 100, (long) (time[i].tv_nsec / 1e3));
     }
 }
-
 
 void create_timer() {
     struct sigevent ev;
@@ -153,6 +115,57 @@ void create_timer() {
     }
 }
 
+void *taskOne() {
+    int iterations = 10;
+    struct timespec time[iterations];
+    for (int i = 0; i < iterations; i++) {
+        struct timespec tim, tim2;
+        load();
+
+        if (clock_gettime(CLOCK_REALTIME, &time[i]) == -1) {
+            perror("clock gettime");
+            exit(EXIT_FAILURE);
+        }
+
+        tim.tv_sec = 0;
+        tim.tv_nsec = 1000000L;
+        if (nanosleep(&tim, &tim2) < 0) {
+            printf("Nano sleep system call failed \n");
+        }
+    }
+    print_time(time, iterations);
+}
+
+void *taskTwo() {
+    int iterations = 10;
+    struct timespec time[iterations];
+    for (int i = 0; i < iterations; i++) {
+        struct timespec deadline;
+        clock_gettime(CLOCK_MONOTONIC, &deadline);
+        // Add the time you want to sleep
+        deadline.tv_nsec += 1000000L;
+
+        // Normalize the time to account for the second boundary
+        if (deadline.tv_nsec >= 1000000000) {
+            deadline.tv_nsec -= 1000000000;
+            deadline.tv_sec++;
+        }
+
+        load();
+
+        if (clock_gettime(CLOCK_MONOTONIC, &time[i]) == -1) {
+            perror("clock gettime");
+            exit(EXIT_FAILURE);
+        }
+
+        if (clock_nanosleep(CLOCK_MONOTONIC, TIMER_ABSTIME, &deadline, NULL) < 0) {
+            perror("clock_nanosleep");
+            exit(EXIT_FAILURE);
+        }
+    }
+    print_time(time, iterations);
+}
+
 void *taskThree() {
     int iterations = 10;
     struct timespec time[iterations];
@@ -162,10 +175,7 @@ void *taskThree() {
         printf("failed sigwait()");
     }
     for (int i = 0; i < iterations; i++) {
-        double sum = 0.0;
-        for (int j = 0; j < 1e2; j++) {
-            sum += sqrt(j);
-        }
+        load();
 
         if (clock_gettime(CLOCK_MONOTONIC, &time[i]) == -1) {
             perror("clock gettime");
@@ -177,9 +187,7 @@ void *taskThree() {
             printf("failed sigwait()");
         }
     }
-    for (int i = 0; i < iterations; i++) {
-        printf("%02ld:%03ld \n", time[i].tv_sec % 100, (long) (time[i].tv_nsec / 1e6));
-    }
+    print_time(time, iterations);
 }
 
 void terminate() {
