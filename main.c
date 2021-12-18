@@ -9,11 +9,14 @@
 #include <unistd.h>
 #include <signal.h>
 #include <string.h>
+#include <sys/mman.h>
 
 // Terminal variables
 static struct termios term;
 
 static pthread_t thread;
+
+static void init_xenomai()
 
 static void *taskOne();
 static void *taskTwo();
@@ -32,9 +35,21 @@ static sigset_t sset;
 static int sig;
 
 int main() {
+    init_xenomai();
+
     createThreads(); // Create threads
     terminate(); // Wait for threads to end and terminate program
     return 0;
+}
+
+void init_xenomai() {
+
+    /* Avoids memory swapping for this program */
+    mlockall(MCL_CURRENT|MCL_FUTURE);
+
+    /* Perform auto-init of rt_print buffers if the task doesn't do so */
+    rt_print_auto_init(1);
+
 }
 
 void createThreads() {
@@ -43,6 +58,7 @@ void createThreads() {
     pthread_attr_t tattr;
 
     pthread_attr_init(&tattr); //tattr init met defaultwaarden
+    pthread_attr_setschedpolicy(&tattr, SCHED_FIFO); //sched policy to real time fifo
 
     //int status = pthread_create(&thread, &tattr, taskOne, (void *) i);  //Create threads
     //int status = pthread_create(&thread, &tattr, taskTwo, (void *) i);  //Create threads
