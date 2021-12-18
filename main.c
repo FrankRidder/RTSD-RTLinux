@@ -16,7 +16,7 @@ static struct termios term;
 
 static pthread_t thread;
 
-static void init_xenomai()
+static void init_xenomai();
 
 static void *taskOne();
 static void *taskTwo();
