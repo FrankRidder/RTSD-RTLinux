@@ -11,6 +11,8 @@
 #include <string.h>
 #include <sys/mman.h>
 
+#include  <rtdk.h>
+
 // Terminal variables
 static struct termios term;
 
