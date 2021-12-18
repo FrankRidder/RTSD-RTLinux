@@ -11,8 +11,6 @@
 #include <string.h>
 #include <sys/mman.h>
 
-#include  <rtdk.h>
-
 // Terminal variables
 static struct termios term;
 
@@ -48,9 +46,6 @@ void init_xenomai() {
 
     /* Avoids memory swapping for this program */
     mlockall(MCL_CURRENT|MCL_FUTURE);
-
-    /* Perform auto-init of rt_print buffers if the task doesn't do so */
-    rt_print_auto_init(1);
 
 }
 
