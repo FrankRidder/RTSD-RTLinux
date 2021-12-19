@@ -11,6 +11,14 @@
 #include <string.h>
 #include <sys/mman.h>
 
+// Exercise 2.1.x
+#define EXERCISE    1
+
+// 0 = print outside loop
+// 1 = printf
+// 2 = __real_printf
+#define PRINT_MODE  0
+
 // Terminal variables
 static struct termios term;
 
@@ -57,9 +65,13 @@ void createThreads() {
     pthread_attr_init(&tattr); //tattr init met defaultwaarden
     pthread_attr_setschedpolicy(&tattr, SCHED_FIFO); //sched policy to real time fifo
 
-    //int status = pthread_create(&thread, &tattr, taskOne, (void *) i);  //Create threads
-    //int status = pthread_create(&thread, &tattr, taskTwo, (void *) i);  //Create threads
-    int status = pthread_create(&thread, &tattr, taskThree, (void *)i); //Create threads
+#if EXERCISE == 1
+    int status = pthread_create(&thread, &tattr, taskOne, (void *) i);  //Create threads
+#elif EXERCISE == 2
+    int status = pthread_create(&thread, &tattr, taskTwo, (void *) i);  //Create threads
+#elif EXERCISE == 3
+    int status = pthread_create(&thread, &tattr, taskThree, (void *) i); //Create threads
+#endif
     if (status != 0) {
         printf("While creating thread 1, pthread_create returned error code %d\n", status);
         exit(-1);
@@ -145,8 +157,23 @@ void *taskOne() {
         if (nanosleep(&tim, &tim2) < 0) {
             printf("Nano sleep system call failed \n");
         }
+#if PRINT_MODE == 1
+        printf("%02ld:%06ld %04ld\n", 
+                time[i].tv_sec % 100, 
+                (long) (time[i].tv_nsec / 1e3), 
+                (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+            );
+#elif PRINT_MODE == 2
+        __real_printf("%02ld:%06ld %04ld\n", 
+            time[i].tv_sec % 100, 
+            (long) (time[i].tv_nsec / 1e3), 
+            (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+        );
+#endif
     }
+#if PRINT_MODE == 0
     print_time(time, iterations);
+#endif
 }
 
 void *taskTwo() {
@@ -175,8 +202,23 @@ void *taskTwo() {
             perror("clock_nanosleep");
             exit(EXIT_FAILURE);
         }
+#if PRINT_MODE == 1
+        printf("%02ld:%06ld %04ld\n", 
+                time[i].tv_sec % 100, 
+                (long) (time[i].tv_nsec / 1e3), 
+                (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+            );
+#elif PRINT_MODE == 2
+        __real_printf("%02ld:%06ld %04ld\n", 
+            time[i].tv_sec % 100, 
+            (long) (time[i].tv_nsec / 1e3), 
+            (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+        );
+#endif
     }
+#if PRINT_MODE == 0
     print_time(time, iterations);
+#endif
 }
 
 void *taskThree() {
@@ -199,8 +241,23 @@ void *taskThree() {
         if (sigwait(&sset, &sig)) {
             printf("failed sigwait()");
         }
+#if PRINT_MODE == 1
+        printf("%02ld:%06ld %04ld\n", 
+                time[i].tv_sec % 100, 
+                (long) (time[i].tv_nsec / 1e3), 
+                (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+            );
+#elif PRINT_MODE == 2
+        __real_printf("%02ld:%06ld %04ld\n", 
+            time[i].tv_sec % 100, 
+            (long) (time[i].tv_nsec / 1e3), 
+            (long) (time[i].tv_nsec / 1e3) - (long) (time[i-1].tv_nsec / 1e3)
+        );
+#endif
     }
+#if PRINT_MODE == 0
     print_time(time, iterations);
+#endif
 }
 
 void terminate() {
