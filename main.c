@@ -10,9 +10,10 @@
 #include <signal.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/syscall.h>
 
 // Exercise 2.1.x
-#define EXERCISE    1
+#define EXERCISE    3
 
 // 0 = print outside loop
 // 1 = printf
@@ -40,7 +41,7 @@ static void load();
 static void print_time(struct timespec time[], int iterations);
 
 static sigset_t sset;
-static int sig;
+static int sig = SIGALRM;
 
 int main() {
     init_xenomai();
@@ -107,32 +108,34 @@ void create_timer() {
     timer_t timer;
     struct itimerspec tset;
 
+    struct itimerspec new_value, old_value;
+
     /* block SIGUSR1 */
     if (sigemptyset(&sset) < 0) {
-        printf("sigemptyset() failed");
+        printf("sigemptyset() failed\n");
     }
     if (sigaddset(&sset, SIGUSR1) < 0) {
-        printf("sigaddset() failed");
+        printf("sigaddset() failed\n");
     }
     if (sigprocmask(SIG_BLOCK, &sset, NULL) < 0) {
-        printf("sigprocmask() failed");
+        printf("sigprocmask() failed\n");
     }
 
     /* create timer that sends SIGUSR1 on expiration */
-    ev.sigev_notify = SIGEV_SIGNAL;
-    ev.sigev_signo = SIGUSR1;
-    ev.sigev_value.sival_ptr = &timer;
+    ev.sigev_notify = SIGEV_THREAD_ID;
+    ev.sigev_notify_thread_id = syscall(__NR_gettid);
+    ev.sigev_signo = sig;
 
     if (timer_create(CLOCK_MONOTONIC, &ev, &timer) < 0) {
-        printf("timer_create() failed");
+        printf("timer_create() failed\n");
     }
     /* get current time value */
     if (clock_gettime(CLOCK_MONOTONIC, &(tset.it_value)) < 0) {
-        printf("clock_gettime() failed");
+        printf("clock_gettime() failed\n");
     }
 
     /* arm timer to start after 1s and expire every 1ms */
-    tset.it_value.tv_sec = tset.it_value.tv_sec + 1;
+    tset.it_value.tv_sec = 0;
     tset.it_interval.tv_sec = 0;
     tset.it_interval.tv_nsec = 1000000L;
     if (timer_settime(timer, TIMER_ABSTIME, &tset, NULL) < 0) {
@@ -225,6 +228,7 @@ void *taskThree() {
     int iterations = 10;
     struct timespec time[iterations];
     create_timer();
+    printf("Timers created\n");
     //Wait initial time
     if (sigwait(&sset, &sig)) {
         printf("failed sigwait()");
