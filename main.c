@@ -117,13 +117,13 @@ void create_timer() {
     if (sigemptyset(&sset) < 0) {
         printf("sigemptyset() failed\n");
     }
-    if (sigaddset(&sset, signum) < 0) {
+    if (sigaddset(&sset, sig) < 0) {
         printf("sigaddset() failed\n");
     }
     if(pthread_sigmask(SIG_BLOCK, &sset, NULL) > 0) {
         printf("sigprocmask() failed\n");
     }
-    
+
     if (timer_create(CLOCK_MONOTONIC, &ev, &timer) < 0) {
         printf("timer_create() failed\n");
     }
