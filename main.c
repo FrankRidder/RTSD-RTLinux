@@ -52,10 +52,8 @@ int main() {
 }
 
 void init_xenomai() {
-
     /* Avoids memory swapping for this program */
     mlockall(MCL_CURRENT|MCL_FUTURE);
-
 }
 
 void createThreads() {
@@ -110,22 +108,22 @@ void create_timer() {
 
     struct itimerspec new_value, old_value;
 
-    /* block SIGUSR1 */
-    if (sigemptyset(&sset) < 0) {
-        printf("sigemptyset() failed\n");
-    }
-    if (sigaddset(&sset, SIGUSR1) < 0) {
-        printf("sigaddset() failed\n");
-    }
-    if (sigprocmask(SIG_BLOCK, &sset, NULL) < 0) {
-        printf("sigprocmask() failed\n");
-    }
-
     /* create timer that sends SIGUSR1 on expiration */
     ev.sigev_notify = SIGEV_THREAD_ID;
     ev.sigev_notify_thread_id = syscall(__NR_gettid);
     ev.sigev_signo = sig;
 
+    /* block SIGUSR1 */
+    if (sigemptyset(&sset) < 0) {
+        printf("sigemptyset() failed\n");
+    }
+    if (sigaddset(&sset, signum) < 0) {
+        printf("sigaddset() failed\n");
+    }
+    if(pthread_sigmask(SIG_BLOCK, &sset, NULL) > 0) {
+        printf("sigprocmask() failed\n");
+    }
+    
     if (timer_create(CLOCK_MONOTONIC, &ev, &timer) < 0) {
         printf("timer_create() failed\n");
     }
@@ -241,7 +239,6 @@ void *taskThree() {
             exit(EXIT_FAILURE);
         }
         /* sleep for another 10s */
-
         if (sigwait(&sset, &sig)) {
             printf("failed sigwait()");
         }
