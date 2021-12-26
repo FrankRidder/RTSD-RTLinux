@@ -12,6 +12,7 @@
 #include <sys/mman.h>
 #include <sys/syscall.h>
 #include <sys/file.h>
+#include <sys/sendfile.h>
 
 // Exercise 2.1.x
 #define EXERCISE    3
@@ -242,7 +243,7 @@ void *taskThree() {
     }
     for (int i = 0; i < iterations; i++) {
 #if ADD_FILEIO
-        int fOut;
+        int fOut, fIn;
 
         // Grab a 255 bit buffer.
         char *buffer = (char *) malloc(255);
@@ -250,10 +251,19 @@ void *taskThree() {
         // Write the buffer to fOut
         fOut = open("buffer1", O_RDONLY);
         write(fOut, &buffer, 255);
-        close(fOut);5
+        close(fOut);
 
-        // Free mem for buffer
+        // Copying data from first file to second
+        fIn = open("buffer1", O_RDONLY);
+        fOut = open("buffer2", O_RDONLY);
+        sendfile(fOut, fIn, 0, 255);
+
+        //Cleanup
+        close(fIn);
+        close(fOut);
         free(buffer);
+        unlink("buffer1");
+        unlink("buffer2")
 #endif
         load();
 
