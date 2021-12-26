@@ -263,7 +263,7 @@ void *taskThree() {
         close(fOut);
         free(buffer);
         unlink("buffer1");
-        unlink("buffer2")
+        unlink("buffer2");
 #endif
         load();
 
