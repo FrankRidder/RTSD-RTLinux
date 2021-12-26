@@ -267,6 +267,9 @@ void *taskThree() {
     }
 #if PRINT_MODE == 0
     print_time(time, iterations);
+    while(1){
+        
+    }
 #endif
 }
 
