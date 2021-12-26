@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/syscall.h>
+#include <sys/file.h>
 
 // Exercise 2.1.x
 #define EXERCISE    3
@@ -20,7 +21,11 @@
 // 2 = __real_printf
 #define PRINT_MODE  2
 
-#define ADD_MODE_SWITCHES 1
+// Add some fileio to create modeswitches maybe
+#define ADD_FILEIO 1
+
+// Add whileloop to go infinite for checking of context switching
+#define GO_INF 1
 
 // Terminal variables
 static struct termios term;
@@ -236,12 +241,19 @@ void *taskThree() {
         printf("failed sigwait()");
     }
     for (int i = 0; i < iterations; i++) {
-#if ADD_MODE_SWITCHES == 1
-        FILE *fp;
-        fp = fopen("test.txt", "w+");
-        __real_fprintf(fp, "This is testing for fprintf...\n");
-        __real_fputs("This is testing for fputs...\n", fp);
-        __real_fclose(fp);
+#if ADD_FILEIO
+        int fOut;
+
+        // Grab a 255 bit buffer.
+        char *buffer = (char *) malloc(255);
+
+        // Write the buffer to fOut
+        fOut = open("buffer1", O_RDONLY);
+        write(fOut, &buffer, 255);
+        close(fOut);5
+
+        // Free mem for buffer
+        free(buffer);
 #endif
         load();
 
@@ -272,9 +284,11 @@ void *taskThree() {
     print_time(time, iterations);
 
 #endif
+#if GO_INF
     while(1){
 
     }
+#endif
 }
 
 void terminate() {
