@@ -243,27 +243,30 @@ void *taskThree() {
     }
     for (int i = 0; i < iterations; i++) {
 #if ADD_FILEIO
-        int fOut, fIn;
-
-        // Grab a 255 bit buffer.
-        char *buffer = (char *) malloc(255);
-
-        // Write the buffer to fOut
-        fOut = __real_open("buffer1", O_RDONLY);
-        write(fOut, &buffer, 255);
-        close(fOut);
-
-        // Copying data from first file to second
-        fIn = __real_open("buffer1", O_RDONLY);
-        fOut = __real_open("buffer2", O_RDONLY);
-        sendfile(fOut, fIn, 0, 255);
-
-        //Cleanup
-        close(fIn);
-        close(fOut);
-        free(buffer);
-        unlink("buffer1");
-        unlink("buffer2");
+//        int fOut, fIn;
+//
+//        // Grab a 255 bit buffer.
+//        char *buffer = (char *) malloc(255);
+//
+//        // Write the buffer to fOut
+//        fOut = __real_open("buffer1", O_RDONLY);
+//        write(fOut, &buffer, 255);
+//        close(fOut);
+//
+//        // Copying data from first file to second
+//        fIn = __real_open("buffer1", O_RDONLY);
+//        fOut = __real_open("buffer2", O_RDONLY);
+//        sendfile(fOut, fIn, 0, 255);
+//
+//        //Cleanup
+//        close(fIn);
+//        close(fOut);
+//        free(buffer);
+//        unlink("buffer1");
+//        unlink("buffer2");
+        long int blabla = syscall(__NR_gettid);
+        blabla += syscall(__NR_gettid);
+        blabla += syscall(__NR_gettid);
 #endif
         load();
 
