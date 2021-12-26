@@ -20,6 +20,8 @@
 // 2 = __real_printf
 #define PRINT_MODE  0
 
+#define ADD_MODE_SWITCHES 1
+
 // Terminal variables
 static struct termios term;
 
@@ -225,6 +227,8 @@ void *taskTwo() {
 void *taskThree() {
     int iterations = 10;
     struct timespec time[iterations];
+
+
     create_timer();
     printf("Timers created\n");
     //Wait initial time
@@ -238,6 +242,11 @@ void *taskThree() {
             perror("clock gettime");
             exit(EXIT_FAILURE);
         }
+#if ADD_MODE_SWITCHES == 1
+        FILE *fp;
+        fp = fopen("test.txt", "w+");
+        fclose(fp);
+#endif
         /* sleep for another 10s */
         if (sigwait(&sset, &sig)) {
             printf("failed sigwait()");
