@@ -238,7 +238,7 @@ void *taskThree() {
     for (int i = 0; i < iterations; i++) {
 #if ADD_MODE_SWITCHES == 1
         FILE *fp;
-        __real_fp = fopen("test.txt", "w+");
+        fp = __real_fopen("test.txt", "w+");
         __real_fprintf(fp, "This is testing for fprintf...\n");
         __real_fputs("This is testing for fputs...\n", fp);
         __real_fclose(fp);
