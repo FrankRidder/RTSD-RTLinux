@@ -256,7 +256,7 @@ void *taskThree() {
         // Copying data from first file to second
         fIn = __real_open("buffer1", O_RDONLY);
         fOut = __real_open("buffer2", O_RDONLY);
-        __real_sendfile(fOut, fIn, 0, 255);
+        sendfile(fOut, fIn, 0, 255);
 
         //Cleanup
         close(fIn);
