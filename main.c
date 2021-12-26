@@ -236,17 +236,20 @@ void *taskThree() {
         printf("failed sigwait()");
     }
     for (int i = 0; i < iterations; i++) {
+#if ADD_MODE_SWITCHES == 1
+        FILE *fp;
+        fp = fopen("test.txt", "w+");
+        fprintf(fp, "This is testing for fprintf...\n");
+        fputs("This is testing for fputs...\n", fp);
+        fclose(fp);
+#endif
         load();
 
         if (clock_gettime(CLOCK_MONOTONIC, &time[i]) == -1) {
             perror("clock gettime");
             exit(EXIT_FAILURE);
         }
-#if ADD_MODE_SWITCHES == 1
-        FILE *fp;
-        fp = fopen("test.txt", "w+");
-        fclose(fp);
-#endif
+
         /* sleep for another 10s */
         if (sigwait(&sset, &sig)) {
             printf("failed sigwait()");
@@ -268,7 +271,7 @@ void *taskThree() {
 #if PRINT_MODE == 0
     print_time(time, iterations);
     while(1){
-        
+
     }
 #endif
 }
