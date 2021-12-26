@@ -18,7 +18,7 @@
 // 0 = print outside loop
 // 1 = printf
 // 2 = __real_printf
-#define PRINT_MODE  0
+#define PRINT_MODE  2
 
 #define ADD_MODE_SWITCHES 1
 
@@ -238,10 +238,10 @@ void *taskThree() {
     for (int i = 0; i < iterations; i++) {
 #if ADD_MODE_SWITCHES == 1
         FILE *fp;
-        fp = fopen("test.txt", "w+");
-        fprintf(fp, "This is testing for fprintf...\n");
-        fputs("This is testing for fputs...\n", fp);
-        fclose(fp);
+        __real_fp = fopen("test.txt", "w+");
+        __real_fprintf(fp, "This is testing for fprintf...\n");
+        __real_fputs("This is testing for fputs...\n", fp);
+        __real_fclose(fp);
 #endif
         load();
 
