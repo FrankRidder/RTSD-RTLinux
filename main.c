@@ -249,14 +249,14 @@ void *taskThree() {
         char *buffer = (char *) malloc(255);
 
         // Write the buffer to fOut
-        fOut = open("buffer1", O_RDONLY);
+        fOut = __real_open("buffer1", O_RDONLY);
         write(fOut, &buffer, 255);
         close(fOut);
 
         // Copying data from first file to second
-        fIn = open("buffer1", O_RDONLY);
-        fOut = open("buffer2", O_RDONLY);
-        sendfile(fOut, fIn, 0, 255);
+        fIn = __real_open("buffer1", O_RDONLY);
+        fOut = __real_open("buffer2", O_RDONLY);
+        __real_sendfile(fOut, fIn, 0, 255);
 
         //Cleanup
         close(fIn);
